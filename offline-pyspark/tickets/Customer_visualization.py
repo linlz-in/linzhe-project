@@ -12,6 +12,7 @@ plt.rcParams["font.family"] = ["SimHei", "WenQuanYi Micro Hei", "Heiti TC"]
 # 设置负号显示
 plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 
+
 class RFM:
     def __init__(self, data: pd.DataFrame = None):
         self.data = data
@@ -42,8 +43,8 @@ class RFM:
 
         print(f"RFM数据已计算，包含{len(self.rfm_data)}个客户")
 
-    def calculate_rfm_scores(self, bins: List[int] = [4,4,4], labels: List[List[str]] = None) -> None:
-        if self.rfm_data is not  None:
+    def calculate_rfm_scores(self, bins: List[int] = [4, 4, 4], labels: List[List[str]] = None) -> None:
+        if self.rfm_data is not None:
             raise ValueError("请先预处理数据")
         if labels is None:
             labels = [
@@ -66,13 +67,13 @@ class RFM:
             self.rfm_data['Monetary'], q=bins[2], labels=labels[2], duplicates='drop'
         )
 
-        self.rfm_data['RFM_Segment'] = self.rfm_data['R_Score'].astype(str) +\
-                                       self.rfm_data['F_Score'].astype(str) +\
+        self.rfm_data['RFM_Segment'] = self.rfm_data['R_Score'].astype(str) + \
+                                       self.rfm_data['F_Score'].astype(str) + \
                                        self.rfm_data['M_Score'].astype(str)
         self.rfm_data['RFM_Score'] = self.rfm_data[['R_Score', 'F_Score', 'M_Score']].astype(int).sum(axis=1)
         print("RFM分数已计算完成")
 
-    def segment_customers(self,n_segment: int = 5) -> None:
+    def segment_customers(self, n_segment: int = 5) -> None:
         if self.rfm_data is None:
             raise ValueError("请先预处理数据")
 
@@ -94,7 +95,7 @@ class RFM:
         print("segment_customers成功：", self.segmented_data.columns.tolist())
 
     def generate_promotions(self, discount_rates: Dict[int, float] = None,
-                                  min_purchase: Dict[int, float] = None) -> pd.DataFrame:
+                            min_purchase: Dict[int, float] = None) -> pd.DataFrame:
         if self.segmented_data is None:
             discount_rates = {i: 0.1 + i * 0.05 for i in range(self.segmented_data['Cluster'].nunique())}
         if min_purchase is None:
@@ -130,6 +131,7 @@ class RFM:
             plt.title('客户聚类结果（Recency vs Frequency）')
             plt.show()
 
+
 class ProductPromotionTool:
     def __init__(self, products: pd.DataFrame = None, rfm: RFM = None):
         self.products = products
@@ -143,9 +145,9 @@ class ProductPromotionTool:
         self.rfm = rfm
 
     def create_campaign(self, campaign_name: str,
-                              product_categories: List[str],
-                              target_clusters: List[int],
-                              discount_strategy: Dict[int,float] = None) -> None:
+                        product_categories: List[str],
+                        target_clusters: List[int],
+                        discount_strategy: Dict[int, float] = None) -> None:
         if self.products is None:
             raise ValueError("请先设置商品数据")
         if self.rfm is None or self.rfm.segmented_data is None:
@@ -169,8 +171,7 @@ class ProductPromotionTool:
         print(f"  参与商品: {len(campaign_products)}个")
         print(f"  目标客户: {len(target_customers)}个")
 
-
-    def generate_campaign_recommendations(self,campaign_name: str) -> pd.DataFrame:
+    def generate_campaign_recommendations(self, campaign_name: str) -> pd.DataFrame:
         if campaign_name not in self.campaigns:
             raise ValueError(f"营销活动 '{campaign_name}' 不存在")
 
@@ -198,18 +199,3 @@ class ProductPromotionTool:
                 })
 
             return pd.DataFrame(recommendations)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

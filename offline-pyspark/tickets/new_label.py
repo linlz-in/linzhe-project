@@ -1,7 +1,5 @@
 import numpy as np
-import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.multioutput import MultiOutputClassifier
@@ -9,6 +7,7 @@ from sklearn.metrics import classification_report
 from sklearn.pipeline import Pipeline
 import joblib
 from typing import List, Tuple, Dict, Any
+
 
 class TagMiningModel:
     def __init__(self):
@@ -30,7 +29,6 @@ class TagMiningModel:
             y = self.mlb.fit_transform(tags) if not hasattr(self.mlb, 'classes_') else self.mlb.transform(tags)
             return texts, y
         return texts, None
-
 
     def train(self, texts: List[str], tags: List[List[str]]) -> None:
         X, y = self.preprocess_data(texts, tags)
