@@ -14,6 +14,8 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <hadoop.version>3.3.1</hadoop.version>
+        <flink.version>1.17.1</flink.version>
     </properties>
     <repositories>
         <repository>
@@ -22,17 +24,13 @@
         </repository>
     </repositories>
     <dependencies>
-        <dependency>
-            <groupId>groupId</groupId>
-            <artifactId>stream-common</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-hdfs-client</artifactId>
-            <version>${hadoop.version}</version>
-            <scope>provided</scope>
-        </dependency>
+        <!--        &lt;!&ndash; https://mvnrepository.com/artifact/org.springframework.cloud.stream.app/stream-applications-security-common &ndash;&gt;-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.springframework.cloud.stream.app</groupId>-->
+        <!--            <artifactId>stream-applications-security-common</artifactId>-->
+        <!--            <version>4.0.0</version>-->
+        <!--        </dependency>-->
+
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
@@ -48,10 +46,6 @@
         <!--          flink 流批开发依赖包  -->
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-clients</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
             <artifactId>flink-java</artifactId>
             <version>1.17.1</version>
         </dependency>
@@ -60,20 +54,11 @@
             <artifactId>flink-sql-connector-hive-2.3.9_2.12</artifactId>
             <version>1.17.1</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-streaming-java</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-hive_2.12</artifactId>
             <version>1.17.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.7</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.mysql</groupId>
@@ -104,11 +89,13 @@
             </exclusions>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
             <version>9.4.1.jre8</version>
         </dependency>
+
         <!--   Flink SQL Server CDC 连接器（包含 SqlServerSource）   -->
         <dependency>
             <groupId>com.ververica</groupId>
@@ -116,60 +103,33 @@
             <version>2.4.1</version>
             <!--   版本需与 Flink 版本兼容，2.4.x 适配 Flink 1.15+   -->
         </dependency>
-        <!--          kafka 依赖  -->
+        <!-- Flink 客户端依赖（包含执行器工厂，本地运行必需） -->
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-kafka</artifactId>
-            <!--              <scope>provided</scope>  -->
+            <artifactId>flink-clients</artifactId>
+            <version>${flink.version}</version> <!-- 复用已定义的 flink.version=1.17.1 -->
         </dependency>
-        <!--          flink RocksDB 依赖  -->
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-statebackend-rocksdb</artifactId>
-        </dependency>
-        <!--          flink table 依赖环境  -->
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-runtime</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-planner-loader</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-common</artifactId>
             <version>${flink.version}</version>
-        </dependency>
-        <!--          Table API 依赖  -->
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-api-java</artifactId>
-        </dependency>
-        <!--          Table API + DataStream 相互集成   -->
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-api-java-bridge</artifactId>
         </dependency>
         <!--          Flink 解析JSON  -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-json</artifactId>
+            <version>${flink.version}</version>
         </dependency>
         <!--          Flink CDC MySQL connector  -->
-        <dependency>
-            <groupId>com.ververica</groupId>
-            <artifactId>flink-connector-mysql-cdc</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
+            <version>1.2.74</version>
         </dependency>
         <!--   Flink 流批一体 Stream 写入HDFS 并指定ORC的存储格式  -->
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-orc</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>com.alibaba.hologres</groupId>
             <artifactId>hologres-connector-flink-1.17</artifactId>
@@ -177,13 +137,11 @@
             <scope>provided</scope>
             <classifier>jar-with-dependencies</classifier>
         </dependency>
-        <dependency>
-            <groupId>cn.hutool</groupId>
-            <artifactId>hutool-all</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>commons-cli</groupId>
             <artifactId>commons-cli</artifactId>
+            <version>1.5.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.doris</groupId>
@@ -191,14 +149,9 @@
             <version>1.5.0</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
-            <version>${hadoop.version}</version>
-            <!--              <scope>provided</scope>  -->
-        </dependency>
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <version>1.18.30</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -214,6 +167,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+            <version>30.1.1-jre</version>
         </dependency>
         <!--          敏感词检测  -->
         <dependency>
@@ -251,30 +205,13 @@
             <artifactId>minio</artifactId>
             <version>8.5.14</version>
         </dependency>
-        <!--   https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-bundle   -->
-        <!--          <dependency>  -->
-        <!--              <groupId>com.amazonaws</groupId>  -->
-        <!--              <artifactId>aws-java-sdk-bundle</artifactId>  -->
-        <!--              <version>1.11.375</version>  -->
-        <!--          </dependency>  -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-s3-fs-hadoop</artifactId>
             <version>${flink.version}</version>
             <!--              <scope>provided</scope>  -->
         </dependency>
-        <!--   Flink SQL Server CDC 连接器（包含 SqlServerSource）   -->
-        <dependency>
-            <groupId>com.ververica</groupId>
-            <artifactId>flink-connector-sqlserver-cdc</artifactId>
-            <version>2.4.1</version>
-            <!--   版本需与 Flink 版本兼容，2.4.x 适配 Flink 1.15+   -->
-        </dependency>
-        <dependency>
-            <groupId>com.microsoft.sqlserver</groupId>
-            <artifactId>mssql-jdbc</artifactId>
-            <version>9.4.1.jre8</version>
-        </dependency>
+
     </dependencies>
     <build>
         <plugins>
@@ -334,7 +271,4 @@
             </resource>
         </resources>
     </build>
-
-
-
 </project>

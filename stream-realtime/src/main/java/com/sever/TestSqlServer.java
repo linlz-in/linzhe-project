@@ -13,16 +13,17 @@ public class TestSqlServer {
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         Properties debeziumProperties = new Properties();
-        debeziumProperties.put("snapshot.mode","schema_only");
+//        debeziumProperties.put("snapshot.mode","schema_only");
+        debeziumProperties.put("snapshot.mode","initial");
         debeziumProperties.put("database.history.store.only.monitored.tables.ddl","true");
         DebeziumSourceFunction<String> sqlServerSource = SqlServerSource.<String>builder()
                 .hostname("192.168.200.101")
                 .port(1433)
                 .username("sa")
-                .password("lz0918./")
+                .password("Ryw963300!")
                 .database("test")
                 .tableList("dbo.test_v1")
-                .startupOptions(StartupOptions.latest())
+                .startupOptions(StartupOptions.initial())
                 .debeziumProperties(debeziumProperties)
                 .deserializer(new JsonDebeziumDeserializationSchema())
                 .build();
