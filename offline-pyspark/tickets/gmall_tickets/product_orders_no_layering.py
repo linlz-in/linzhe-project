@@ -83,15 +83,15 @@ competitor_analysis.show()
 
 # 单品竞争力构成（加权计算）
 competitor_constitute = competitor_analysis.withColumn(
-    "traffic_weight", col("traffic_index") * 0.3
+    "traffic_weight", col("traffic_index") * 0.35
 ).withColumn(
-    "conversion_weight", col("conversion_index") * 0.25
+    "conversion_weight", col("conversion_index") * 0.3
 ).withColumn(
     "content_weight", col("content_index") * 0.15
 ).withColumn(
-    "new_user_weight", col("new_user_index") * 0.15
+    "new_user_weight", col("new_user_index") * 0.1
 ).withColumn(
-    "service_weight", col("service_index") * 0.15
+    "service_weight", col("service_index") * 0.1
 ).withColumn(
     "total_score",
     col("traffic_weight") + col("conversion_weight") +

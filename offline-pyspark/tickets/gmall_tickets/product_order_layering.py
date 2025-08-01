@@ -194,14 +194,14 @@ spark.sql("""
     select
         product_id,
         product_name,
-        traffic_index * 0.3 as traffic_weight,
-        conversion_index * 0.25 as conversion_weight,
+        traffic_index * 0.35 as traffic_weight,
+        conversion_index * 0.3 as conversion_weight,
         service_index * 0.15 as service_weight,
-        new_user_index * 0.15 as new_user_weight,
-        content_index * 0.15 as content_weight,
-        (traffic_index * 0.3 + conversion_index * 0.25 +
-        service_index * 0.15 + new_user_index * 0.15 +
-        content_index * 0.15) as total_score
+        new_user_index * 0.1 as new_user_weight,
+        content_index * 0.1 as content_weight,
+        (traffic_index * 0.35 + conversion_index * 0.3 +
+        service_index * 0.15 + new_user_index * 0.1 +
+        content_index * 0.1) as total_score
     from ads_product_competitor_dimension
 """)
 
