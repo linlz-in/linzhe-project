@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+// 该参数为false时 生成单个proto的文件
+option java_multiple_files = false;
+option java_package = "com.lz.rpc";
+option java_outer_classname = "CryptoProto";
+
+service CryptoService {
+  rpc Encrypt (EncryptRequest) returns (EncryptResponse) {}
+  rpc Decrypt (DecryptRequest) returns (DecryptResponse) {}
+}
+
+message EncryptRequest {
+  string plain_text = 1;
+}
+
+message EncryptResponse {
+  bytes encrypted_data = 1;
+}
+
+message DecryptRequest {
+  bytes encrypted_data = 1;
+}
+
+message DecryptResponse {
+  string decrypted_text = 1;
+}
