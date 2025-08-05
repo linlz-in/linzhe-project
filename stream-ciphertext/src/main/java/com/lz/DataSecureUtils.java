@@ -14,15 +14,15 @@ import java.security.SecureRandom;
  * @Date: 2025/8/4 20:31
  * @version: 1.8
  */
-public class DatasecureUtils {
+public class DataSecureUtils {
     private static final String AES_ALGORITHM = "AES/GCM/NoPadding";
     private static final int GCM_IV_LENGTH = 12;
     private static final int GCM_TAG_LENGTH = 16;
     private static final int AES_KEY_SIZE = 128;
 
     private final SecretKey secretKey;
-    public static final byte[] keyBytes = DatasecureUtils.hexStringToByteArray("00112233445566778899AABBCCDDEEFF");
-    public DatasecureUtils(SecretKey secretKey) {
+    public static final byte[] keyBytes = DataSecureUtils.hexStringToByteArray("00112233445566778899AABBCCDDEEFF");
+    public DataSecureUtils(SecretKey secretKey) {
         this.secretKey = (secretKey != null) ? secretKey : generateSecretKey();
     }
 
