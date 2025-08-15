@@ -3,6 +3,9 @@ package com.stream.common.utils;
 import java.util.List;
 import java.util.regex.Pattern;
 
+/**
+ * StringUtils
+ */
 
 public class StringsUtils {
     private StringsUtils() {

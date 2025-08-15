@@ -13,6 +13,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * CommonUtils
+ */
+
 public class CommonUtils {
     // 16进制 转 10进制
     public static String binaryConvert(String input, Boolean is_need_divide) {

@@ -19,6 +19,9 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 
+/**
+ * HBase工具类
+ */
 
 public class HbaseUtils {
     private Connection connection;

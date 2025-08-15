@@ -29,6 +29,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * Kafka工具类
+ */
 
 public final class KafkaUtils {
 

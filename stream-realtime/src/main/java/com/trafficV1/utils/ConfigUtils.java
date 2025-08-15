@@ -1,4 +1,4 @@
-package com.utils;
+package com.trafficV1.utils;
 
 import com.google.common.base.Strings;
 import org.slf4j.Logger;

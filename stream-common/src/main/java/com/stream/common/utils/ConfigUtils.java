@@ -7,6 +7,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Properties;
 
+/**
+ * 配置文件工具类
+ */
 
 public final class ConfigUtils {
     private static final Logger logger = LoggerFactory.getLogger(ConfigUtils.class);
