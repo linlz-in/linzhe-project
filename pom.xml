@@ -49,7 +49,7 @@
                 <groupId>org.apache.flink</groupId>
                 <artifactId>flink-streaming-java</artifactId>
                 <version>${flink.version}</version>
-                <!--                <scope>provided</scope>-->
+<!--                <scope>provided</scope>-->
             </dependency>
 
             <dependency>

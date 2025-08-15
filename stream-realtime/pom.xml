@@ -16,12 +16,12 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <!--    <repositories>-->
-    <!--        <repository>-->
-    <!--            <id>cloudera</id>-->
-    <!--            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>-->
-    <!--        </repository>-->
-    <!--    </repositories>-->
+    <repositories>
+        <repository>
+            <id>cloudera</id>
+            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+        </repository>
+    </repositories>
 
     <dependencies>
 
@@ -177,11 +177,11 @@
         </dependency>
 
         <!--        Flink CDC Pg connector-->
-        <!--        <dependency>-->
-        <!--            <groupId>org.apache.flink</groupId>-->
-        <!--            <artifactId>flink-connector-postgres-cdc</artifactId>-->
-        <!--            <version>3.4.0</version>-->
-        <!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.flink</groupId>-->
+<!--            <artifactId>flink-connector-postgres-cdc</artifactId>-->
+<!--            <version>3.4.0</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>com.ververica</groupId>
@@ -309,11 +309,11 @@
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-bundle -->
-        <!--        <dependency>-->
-        <!--            <groupId>com.amazonaws</groupId>-->
-        <!--            <artifactId>aws-java-sdk-bundle</artifactId>-->
-        <!--            <version>1.11.375</version>-->
-        <!--        </dependency>-->
+<!--                <dependency>-->
+<!--                    <groupId>com.amazonaws</groupId>-->
+<!--                    <artifactId>aws-java-sdk-bundle</artifactId>-->
+<!--                    <version>1.11.375</version>-->
+<!--                </dependency>-->
 
         <dependency>
             <groupId>org.apache.flink</groupId>
@@ -321,14 +321,8 @@
             <version>${flink.version}</version>
             <!--            <scope>provided</scope>-->
         </dependency>
-        <dependency>
-            <groupId>com.lz</groupId>
-            <artifactId>stream-common</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
 
-        <!--        <dependency>-->
+<!--        <dependency>-->
 <!--            <groupId>com.zh</groupId>-->
 <!--            <artifactId>data-encryption</artifactId>-->
 <!--            <version>1.0-RELEASE</version>-->
