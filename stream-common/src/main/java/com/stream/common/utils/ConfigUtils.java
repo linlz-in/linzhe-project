@@ -1,4 +1,4 @@
-package com.utils;
+package com.stream.common.utils;
 
 import com.google.common.base.Strings;
 import org.slf4j.Logger;
@@ -7,12 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Properties;
 
-/**
- * @Package:
- * @Author: lz
- * @Date: 2025/8/11 20:38
- * @version: 1.8
- */
+
 public final class ConfigUtils {
     private static final Logger logger = LoggerFactory.getLogger(ConfigUtils.class);
 

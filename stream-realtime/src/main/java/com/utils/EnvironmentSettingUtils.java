@@ -3,12 +3,11 @@ package com.utils;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.time.Time;
 import org.apache.flink.contrib.streaming.state.EmbeddedRocksDBStateBackend;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.flink.runtime.state.storage.FileSystemCheckpointStorage;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-
+import org.apache.hadoop.conf.Configuration;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -19,12 +18,14 @@ import java.util.concurrent.TimeUnit;
  * @Date: 2025/8/11 20:35
  * @version: 1.8
  */
-public class EnvironmentSettingsUtils {
+public final class EnvironmentSettingUtils {
     private static final String HDFS_CHECKPOINT_PATH = ConfigUtils.getString("flink.checkpoint.hdfs.dir");
+    // s3a://10.39.48.35:9000/flk-data
     private static final String MINIO_CHECKPOINT_PATH = ConfigUtils.getString("flink.checkpoint.minio.dir");
 
     /**
      * 默认参数设置
+     *
      * @param env
      */
     public static void defaultParameter(StreamExecutionEnvironment env) {
