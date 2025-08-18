@@ -13,6 +13,7 @@ import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.common.time.Time;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
+import org.apache.flink.runtime.state.memory.MemoryStateBackend;
 import org.apache.flink.streaming.api.datastream.*;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.ProcessFunction;
@@ -30,7 +31,7 @@ import java.util.HashMap;
  */
 public class DbusLogDataProcess2Kafka {
     private static final String kafka_topic_base_log_data = ConfigUtils.getString("REALTIME.KAFKA.LOG.TOPIC");
-    private static final String kafka_botstrap_servers = ConfigUtils.getString("Kafka.bootstrap.servers");
+    private static final String kafka_botstrap_servers = ConfigUtils.getString("kafka.bootstrap.servers");
     private static final String kafka_err_log = ConfigUtils.getString("kafka.err.log");
     private static final String kafka_start_log = ConfigUtils.getString("kafka.start.log");
     private static final String kafka_display_log = ConfigUtils.getString("kafka.display.log");
@@ -65,12 +66,14 @@ public class DbusLogDataProcess2Kafka {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         EnvironmentSettingUtils.defaultParameter(env);
 
+        env.setStateBackend(new MemoryStateBackend());
+
         DataStreamSource<String> kafkaSourceDs = env.fromSource(
                 KafkaUtils.buildKafkaSource(
                         kafka_botstrap_servers,
                         kafka_topic_base_log_data,
                         new Date().toString(),
-                        OffsetsInitializer.latest()
+                        OffsetsInitializer.earliest()
                 ),
                 WatermarkStrategy.noWatermarks(),
                 "read_kafka_realtime_log"

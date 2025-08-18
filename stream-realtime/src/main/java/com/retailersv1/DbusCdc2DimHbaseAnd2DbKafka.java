@@ -43,8 +43,10 @@ public class DbusCdc2DimHbaseAnd2DbKafka {
                 "",
                 ConfigUtils.getString("mysql.user"),
                 ConfigUtils.getString("mysql.pwd"),
+                "2800-2988",
                 StartupOptions.initial()
         );
+
 
         // 读取配置库的变化binlog
         MySqlSource<String> mySQLCdcDimConfSource = CdcSourceUtils.getMySQLCdcSource(
@@ -52,6 +54,7 @@ public class DbusCdc2DimHbaseAnd2DbKafka {
                 "realtime_v1_config.table_process_dim",
                 ConfigUtils.getString("mysql.user"),
                 ConfigUtils.getString("mysql.pwd"),
+                "3001-4000",
                 StartupOptions.initial()
         );
 
