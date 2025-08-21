@@ -15,12 +15,15 @@ import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
+import org.apache.flink.runtime.state.memory.MemoryStateBackend;
+import org.apache.flink.runtime.state.storage.JobManagerCheckpointStorage;
 import org.apache.flink.streaming.api.datastream.AsyncDataStream;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 
 import java.time.Duration;
@@ -51,7 +54,17 @@ public class DbusDBCommentFactData2Kafka {
 
         System.setProperty("HADOOP_USER_NAME","root");
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        EnvironmentSettingUtils.defaultParameter(env);
+        //1.2 设置并行度
+        env.setParallelism(1);
+        //1.3 指定表执行环境
+        StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
+        //TODO 2.检查点相关的设置
+        tableEnv.getConfig().setIdleStateRetention(Duration.ofSeconds(10));
+
+
+//        EnvironmentSettingUtils.defaultParameter(env);
+
+
 
         // 评论表 取数
         SingleOutputStreamOperator<String> kafkaCdcDbSource = env.fromSource(
@@ -179,8 +192,27 @@ public class DbusDBCommentFactData2Kafka {
         SingleOutputStreamOperator<JSONObject> supplementDataMap = orderMsgAllDs.map(new RichMapFunction<JSONObject, JSONObject>() {
             @Override
             public JSONObject map(JSONObject jsonObject) {
-                jsonObject.put("commentTxt", CommonGenerateTempLate.GenerateComment(jsonObject.getString("dic_name"), jsonObject.getString("info_trade_body")));
+                // 直接使用降级评论，完全不调用可能出错的API
+                String comment = generateFallbackComment(
+                        jsonObject.getString("dic_name"),
+                        jsonObject.getString("info_trade_body")
+                );
+                jsonObject.put("commentTxt", comment);
                 return jsonObject;
+            }
+
+            private String generateFallbackComment(String dicName, String tradeBody) {
+                String product = tradeBody.length() > 20 ? tradeBody.substring(0, 20) + "..." : tradeBody;
+                switch (dicName) {
+                    case "好评":
+                        return "👍 " + product + " 物超所值，使用体验很棒！";
+                    case "中评":
+                        return "➖ " + product + " 中规中矩，有待提升。";
+                    case "差评":
+                        return "👎 " + product + " 不太满意，需要改进。";
+                    default:
+                        return "📝 对" + product + "的" + dicName + "评价";
+                }
             }
         }).uid("map-generate_comment").name("map-generate_comment");
 

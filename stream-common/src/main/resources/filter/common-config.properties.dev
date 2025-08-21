@@ -26,6 +26,7 @@ kafka.display.log=display_log
 kafka.action.log=action_log
 kafka.page.topic=ods_page_log
 kafka.cdc.db.topic=cdc_db_topic
+kafka.db.fact.comment.topic=kafka_db_fact_comment_sink
 
 # Zookeeper 本地配置
 zookeeper.server.host.list=192.168.200.101:2181
