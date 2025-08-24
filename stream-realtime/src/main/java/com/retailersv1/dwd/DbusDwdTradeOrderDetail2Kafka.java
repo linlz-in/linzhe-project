@@ -118,7 +118,7 @@ public class DbusDwdTradeOrderDetail2Kafka {
                         "on od.id=act.order_detail_id " +
                         "left join order_detail_coupon cou " +
                         "on od.id=cou.order_detail_id ");
-//        result.execute().print();
+        result.execute().print();
 
         tableEnv.executeSql(
                 "create table "+DWD_TRADE_ORDER_DETAIL+"(" +
@@ -141,8 +141,6 @@ public class DbusDwdTradeOrderDetail2Kafka {
                         "ts bigint," +
                         "primary key(id) not enforced " +
                         ")" + SqlUtils.getUpsertKafkaDDL(DWD_TRADE_ORDER_DETAIL));
-
-
 
         result.executeInsert(DWD_TRADE_ORDER_DETAIL);
 

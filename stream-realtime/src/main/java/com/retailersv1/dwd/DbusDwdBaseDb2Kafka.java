@@ -56,7 +56,7 @@ public class DbusDwdBaseDb2Kafka {
 
         SingleOutputStreamOperator<JSONObject> jsonObjDs = kafkaSourceDs.process(new ProcessFunction<String, JSONObject>() {
             @Override
-            public void processElement(String s, ProcessFunction<String, JSONObject>.Context context, Collector<JSONObject> collector) throws Exception {
+            public void processElement(String s, ProcessFunction<String, JSONObject>.Context context, Collector<JSONObject> collector) {
                 try {
                     JSONObject jsonObj = JSONObject.parseObject(s);
                     collector.collect(jsonObj);
@@ -70,24 +70,22 @@ public class DbusDwdBaseDb2Kafka {
                 "realtime_v1_config.table_process_dwd",
                 ConfigUtils.getString("mysql.user"),
                 ConfigUtils.getString("mysql.pwd"),
-                StartupOptions.initial()
+                StartupOptions.initial(),
+                "10000-10050"
         );
         DataStreamSource<String> cdcDbDwdStream = env.fromSource(mySQLCdcDwdConfSource, WatermarkStrategy.noWatermarks(), "mysql_cdc_dwd_source");
 
-        SingleOutputStreamOperator<TableProcessDwd> tpDs = cdcDbDwdStream.map(new MapFunction<String, TableProcessDwd>() {
-            @Override
-            public TableProcessDwd map(String jsonStr) throws Exception {
-                JSONObject jsonObj = JSONObject.parseObject(jsonStr);
-                String op = jsonObj.getString("op");
-                TableProcessDwd tp = null;
-                if ("d".equals(op)){
-                    tp = jsonObj.getObject("before", TableProcessDwd.class);
-                }else {
-                    tp = jsonObj.getObject("after", TableProcessDwd.class);
-                }
-                tp.setOp( op);
-                return tp;
+        SingleOutputStreamOperator<TableProcessDwd> tpDs = cdcDbDwdStream.map((MapFunction<String, TableProcessDwd>) jsonStr -> {
+            JSONObject jsonObj = JSONObject.parseObject(jsonStr);
+            String op = jsonObj.getString("op");
+            TableProcessDwd tp;
+            if ("d".equals(op)){
+                tp = jsonObj.getObject("before", TableProcessDwd.class);
+            }else {
+                tp = jsonObj.getObject("after", TableProcessDwd.class);
             }
+            tp.setOp( op);
+            return tp;
         });
 //        tpDs.print();
 
@@ -98,7 +96,7 @@ public class DbusDwdBaseDb2Kafka {
 
         SingleOutputStreamOperator<Tuple2<JSONObject, TableProcessDwd>> splitDs = connectDs.process(
                 new BroadcastProcessFunction<JSONObject, TableProcessDwd, Tuple2<JSONObject, TableProcessDwd>>() {
-                    private Map<String, TableProcessDwd> configMap = new HashMap<>();
+                    private final Map<String, TableProcessDwd> configMap = new HashMap<>();
 
                     @Override
                     public void open(Configuration parameters) throws Exception {
@@ -120,7 +118,7 @@ public class DbusDwdBaseDb2Kafka {
 //                        {"op":"r","after":{"category_level":3,"category_id":178,"create_time":1639440000000,"attr_name":"像素","id":73},"source":{"server_id":0,"version":"1.9.7.Final","file":"","connector":"mysql","pos":0,"name":"mysql_binlog_source","row":0,"ts_ms":0,"snapshot":"false","db":"realtime_v1","table":"base_attr_info"},"ts_ms":1755243556351}
                         String tableName = jsonObj.getJSONObject("source").getString("table");
                         ReadOnlyBroadcastState<String, TableProcessDwd> broadcastState = readOnlyContext.getBroadcastState(mapStateDescriptor);
-                        TableProcessDwd tp = null;
+                        TableProcessDwd tp;
                         if ((tp = broadcastState.get(tableName)) != null || (tp = configMap.get(tableName)) != null) {
                             JSONObject after = jsonObj.getJSONObject("after");
                             deleteNotNeedColumns(after, tp.getSinkColumns());

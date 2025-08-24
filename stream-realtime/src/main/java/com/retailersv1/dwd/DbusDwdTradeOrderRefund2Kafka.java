@@ -80,7 +80,7 @@ public class DbusDwdTradeOrderRefund2Kafka {
                         "and `after`['order_status']='1005' ");
         tableEnv.createTemporaryView("order_info", orderInfo);
 
-//        orderInfo.execute().print();
+        orderInfo.execute().print();
         // 4. join: 普通的和 lookup join
 
         Table result = tableEnv.sqlQuery(
