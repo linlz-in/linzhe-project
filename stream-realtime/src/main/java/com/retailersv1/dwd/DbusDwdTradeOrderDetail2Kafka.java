@@ -22,7 +22,7 @@ public class DbusDwdTradeOrderDetail2Kafka {
 
     public static void main(String[] args) {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        EnvironmentSettingUtils.defaultParameter(env);
+//        EnvironmentSettingUtils.defaultParameter(env);
 
         StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
         // 设置状态的保存时长
@@ -118,7 +118,7 @@ public class DbusDwdTradeOrderDetail2Kafka {
                         "on od.id=act.order_detail_id " +
                         "left join order_detail_coupon cou " +
                         "on od.id=cou.order_detail_id ");
-        result.execute().print();
+//        result.execute().print();
 
         tableEnv.executeSql(
                 "create table "+DWD_TRADE_ORDER_DETAIL+"(" +
