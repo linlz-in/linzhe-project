@@ -24,19 +24,25 @@ public class ShopPermanceSource {
      * @return 原始JSON数据流
      */
     public static DataStream<String> buildSource(StreamExecutionEnvironment env) {
-        // 本地测试： 使用模拟数据生成器
-        return env.addSource(new DataGenerator())
-                .name("shop-performance-source")
-                .uid("shop-performance-sim-source-uid");
+        // 示例：通过系统属性/配置判断环境，实际可从配置中心、枚举等灵活获取
+        String envFlag = System.getProperty("env", "local");
+        if ("local".equals(envFlag)) {
+            // 本地测试：模拟数据
+            return env.addSource(new DataGenerator())
+                    .name("shop-performance-source")
+                    .uid("shop-performance-sim-source-uid");
+        } else {
+            // 生产环境：Kafka 数据源
+            Properties kafkaProps = new Properties();
+            kafkaProps.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "cdh01:9092,cdh02:9092,cdh03:9092");
+            kafkaProps.setProperty(ConsumerConfig.GROUP_ID_CONFIG, "shop-performance-group");
 
-        // 生产环境： 使用Kafka数据源
-        Properties kafkaProps = new Properties();
-        kafkaProps.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "cdh01:9092,cdh02:9092,cdh03:9092");
-        kafkaProps.setProperty(ConsumerConfig.GROUP_ID_CONFIG, "shop-performance-group");
-
-        return env.addSource(new FlinkKafkaConsumer<>("shop-performance-topic",
-                        new SimpleStringSchema(), kafkaProps))
-                .name("shop-performance-kafka-source")
-                .uid("shop-performance-kafka-source-uid");
+            return env.addSource(new FlinkKafkaConsumer<>(
+                            "shop-performance-topic",
+                            new SimpleStringSchema(),
+                            kafkaProps))
+                    .name("shop-performance-kafka-source")
+                    .uid("shop-performance-kafka-source-uid");
+        }
     }
 }

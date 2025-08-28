@@ -3,6 +3,7 @@ package com.userportraits;
 import com.alibaba.fastjson.JSON;
 import com.userportraits.bean.Common;
 import com.userportraits.data.DataGenerator;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.util.Collector;
 
@@ -85,7 +86,9 @@ public class ShopPerformanceETL {
                     if (cleanedData.getUserId() != null && cleanedData.getConsultTime() != null) {
                         out.collect(cleanedData);
                     }
-                }).name("shop-performance-etl")
+                })
+                .returns(TypeInformation.of(Common.CleanedShopData.class))
+                .name("shop-performance-etl")
                 .uid("shop-performance-etl-uid");
 
     }

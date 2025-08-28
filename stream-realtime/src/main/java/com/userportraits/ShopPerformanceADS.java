@@ -4,6 +4,7 @@ import com.userportraits.bean.Common;
 import org.apache.flink.api.common.functions.AggregateFunction;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
@@ -39,93 +40,95 @@ public class ShopPerformanceADS {
                 .keyBy((KeySelector<Common.CleanedShopData, String>) data -> data.getProductId() + "_" + data.getDimension())
                 .window(TumblingProcessingTimeWindows.of(Time.minutes(5))) // 5分钟窗口
                 .aggregate(new AggregateFunction<Common.CleanedShopData, IndicatorAccumulator, Common.ShopPerformanceResult>() {
-                    @Override
-                    public IndicatorAccumulator createAccumulator() {
-                        return new IndicatorAccumulator();
-                    }
+                               @Override
+                               public IndicatorAccumulator createAccumulator() {
+                                   return new IndicatorAccumulator();
+                               }
 
-                    @Override
-                    public IndicatorAccumulator add(Common.CleanedShopData data, IndicatorAccumulator accumulator) {
-                        // 累加咨询人数（去重）
-                        accumulator.consultUsers.add(data.getUserId());
-                        // 累加询单人数 （有询单时间且去重）
-                        if (data.getInquireTime() != null) {
-                            accumulator.inquireUsers.add(data.getUserId());
+                               @Override
+                               public IndicatorAccumulator add(Common.CleanedShopData data, IndicatorAccumulator accumulator) {
+                                   // 累加咨询人数（去重）
+                                   accumulator.consultUsers.add(data.getUserId());
+                                   // 累加询单人数 （有询单时间且去重）
+                                   if (data.getInquireTime() != null) {
+                                       accumulator.inquireUsers.add(data.getUserId());
 
-                            // 判断是否为当日询单 （咨询与询单在同一天）
-                            if (data.getConsultTime() != null && data.getConsultTime().toLocalDate().equals(data.getInquireTime().toLocalDate())) {
-                                accumulator.sameDayInquireUsers.add(data.getUserId());
-                            }
-                        }
+                                       // 判断是否为当日询单 （咨询与询单在同一天）
+                                       if (data.getConsultTime() != null && data.getConsultTime().toLocalDate().equals(data.getInquireTime().toLocalDate())) {
+                                           accumulator.sameDayInquireUsers.add(data.getUserId());
+                                       }
+                                   }
 
-                        // 下单后付款行为分析
-                        if (data.getPlaceOrderTime() != null && data.getPayTime() != null) {
-                            // 判断下单、付款 在同一天
-                            if (data.getPlaceOrderTime().toLocalDate().equals(data.getPayTime().toLocalDate())){
-                                accumulator.sameDayPayUsers.add(data.getUserId());
-                                accumulator.sameDayPayAmount += data.getPayAmount();
-                            }
-                            // 最终付款指标
-                            accumulator.finalPayUsers.add(data.getUserId());
-                            accumulator.finalPayAmount += data.getPayAmount();
-                            accumulator.finalPayQuantity += data.getPayQuantity();
-                        }
-                        return accumulator;
-                    }
+                                   // 下单后付款行为分析
+                                   if (data.getPlaceOrderTime() != null && data.getPayTime() != null) {
+                                       // 判断下单、付款 在同一天
+                                       if (data.getPlaceOrderTime().toLocalDate().equals(data.getPayTime().toLocalDate())) {
+                                           accumulator.sameDayPayUsers.add(data.getUserId());
+                                           accumulator.sameDayPayAmount += data.getPayAmount();
+                                       }
+                                       // 最终付款指标
+                                       accumulator.finalPayUsers.add(data.getUserId());
+                                       accumulator.finalPayAmount += data.getPayAmount();
+                                       accumulator.finalPayQuantity += data.getPayQuantity();
+                                   }
+                                   return accumulator;
+                               }
 
-                    @Override
-                    public Common.ShopPerformanceResult getResult(IndicatorAccumulator accumulator) {
-                        Common.ShopPerformanceResult result = new Common.ShopPerformanceResult();
-                         // 基础指标赋值
-                        result.setConsultUserCount(accumulator.consultUsers.size());
-                        result.setInquireUserCount(accumulator.inquireUsers.size());
-                        result.setSameDayInquireUserCount(accumulator.sameDayInquireUsers.size());
-                        result.setSameDayPayUserCount(accumulator.sameDayPayUsers.size());
-                        result.setSameDayPayAmount(accumulator.sameDayPayAmount);
-                        result.setFinalPayUserCount(accumulator.finalPayUsers.size());
-                        result.setFinalPayAmount(accumulator.finalPayAmount);
-                        result.setFinalPayQuantity(accumulator.finalPayQuantity);
+                               @Override
+                               public Common.ShopPerformanceResult getResult(IndicatorAccumulator accumulator) {
+                                   Common.ShopPerformanceResult result = new Common.ShopPerformanceResult();
+                                   // 基础指标赋值
+                                   result.setConsultUserCount(accumulator.consultUsers.size());
+                                   result.setInquireUserCount(accumulator.inquireUsers.size());
+                                   result.setSameDayInquireUserCount(accumulator.sameDayInquireUsers.size());
+                                   result.setSameDayPayUserCount(accumulator.sameDayPayUsers.size());
+                                   result.setSameDayPayAmount(accumulator.sameDayPayAmount);
+                                   result.setFinalPayUserCount(accumulator.finalPayUsers.size());
+                                   result.setFinalPayAmount(accumulator.finalPayAmount);
+                                   result.setFinalPayQuantity(accumulator.finalPayQuantity);
 
-                        // 计算转换率
-                        result.setInquireConversionRate(
-                                accumulator.consultUsers.isEmpty() ? 0.0 :
-                                accumulator.inquireUsers.size() * 1.0 / accumulator.consultUsers.size()
-                        );
+                                   // 计算转换率
+                                   result.setInquireConversionRate(
+                                           accumulator.consultUsers.isEmpty() ? 0.0 :
+                                                   accumulator.inquireUsers.size() * 1.0 / accumulator.consultUsers.size()
+                                   );
 
-                        result.setSameDayInquireConversionRate(
-                                accumulator.consultUsers.isEmpty() ? 0.0 :
-                                accumulator.sameDayInquireUsers.size() * 1.0 / accumulator.consultUsers.size()
-                        );
-                        return result;
-                    }
+                                   result.setSameDayInquireConversionRate(
+                                           accumulator.consultUsers.isEmpty() ? 0.0 :
+                                                   accumulator.sameDayInquireUsers.size() * 1.0 / accumulator.consultUsers.size()
+                                   );
+                                   return result;
+                               }
 
-                    @Override
-                    public IndicatorAccumulator merge(IndicatorAccumulator a, IndicatorAccumulator b) {
-                        a.consultUsers.addAll(b.consultUsers);
-                        a.inquireUsers.addAll(b.inquireUsers);
-                        a.sameDayInquireUsers.addAll(b.sameDayInquireUsers);
-                        a.sameDayPayUsers.addAll(b.sameDayPayUsers);
-                        a.sameDayPayAmount += b.sameDayPayAmount;
-                        a.finalPayUsers.addAll(b.finalPayUsers);
-                        a.finalPayAmount += b.finalPayAmount;
-                        a.finalPayQuantity += b.finalPayQuantity;
-                        return a;
-                    }
-                },  // 窗口结果处理 （补充窗口时间、商品id、维度信息）
-                        (String key, TimeWindow window, Iterable<Common.ShopPerformanceResult> results, Collector<Common.ShopPerformanceResult> out) -> {
-                            Common.ShopPerformanceResult result = results.iterator().next();
-                            //解析key获取商品id 和 维度
-                            String[] keyParts = key.split("_");
-                            result.setProductId(keyParts[0]);
-                            result.setDimension(keyParts[1]);
-                            // 格式化窗口时间
-                            String windownTime = LocalDateTime.ofEpochSecond(window.getStart() / 1000, 0, ZoneOffset.UTC)
-                                    .format(dtf) + " - " +
-                                    LocalDateTime.ofEpochSecond(window.getEnd() / 1000, 0, ZoneOffset.UTC)
-                                            .format(dtf);
-                            result.setTimeWindow(windownTime);
-                            out.collect(result);
-                        }
+                               @Override
+                               public IndicatorAccumulator merge(IndicatorAccumulator a, IndicatorAccumulator b) {
+                                   a.consultUsers.addAll(b.consultUsers);
+                                   a.inquireUsers.addAll(b.inquireUsers);
+                                   a.sameDayInquireUsers.addAll(b.sameDayInquireUsers);
+                                   a.sameDayPayUsers.addAll(b.sameDayPayUsers);
+                                   a.sameDayPayAmount += b.sameDayPayAmount;
+                                   a.finalPayUsers.addAll(b.finalPayUsers);
+                                   a.finalPayAmount += b.finalPayAmount;
+                                   a.finalPayQuantity += b.finalPayQuantity;
+                                   return a;
+                               }
+                           }, new WindowFunction<Common.ShopPerformanceResult, Common.ShopPerformanceResult, String, TimeWindow>() {
+                               @Override
+                               public void apply(String s, TimeWindow window, Iterable<Common.ShopPerformanceResult> input, Collector<Common.ShopPerformanceResult> out) throws Exception {
+                                   Common.ShopPerformanceResult result = input.iterator().next();
+                                   // 解析key获取商品id 和 维度
+                                   String[] keyParts = s.split("_");
+                                   result.setProductId(keyParts[0]);
+                                   result.setDimension(keyParts[1]);
+                                   // 格式化窗口时间
+                                   String windowTime = LocalDateTime.ofEpochSecond(window.getStart() / 1000, 0, ZoneOffset.UTC)
+                                            .format(dtf) + " - " +
+                                           LocalDateTime.ofEpochSecond(window.getEnd() / 1000, 0, ZoneOffset.UTC)
+                                           .format(dtf);
+                                   result.setTimeWindow(windowTime);
+                                   out.collect(result);
+                               }
+                           }
 
                 ).name("shop-performance-ads")
                 .uid("shop-performance-ads-uid");

@@ -22,7 +22,7 @@ public class DataGenerator implements SourceFunction<String> {
     private boolean isRunning = true;
     private int currentCount = 0;
     private final Random random = new Random();
-    private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     // 模拟维度、渠道、消息类型
     private static final String[] DIMNSIONS = {"店铺", "客服", "静默"};

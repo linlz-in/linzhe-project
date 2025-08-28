@@ -22,6 +22,7 @@ public class ShopPerformanceJob {
         DataStream<String> rawStream = ShopPermanceSource.buildSource(env);
         DataStream<Common.CleanedShopData> cleanedStream = ShopPerformanceETL.processETL(rawStream);
         DataStream<Common.ShopPerformanceResult> resultStream = ShopPerformanceADS.calculateIndicators(cleanedStream);
+//        ShopPerformanceSink.writeResult(resultStream);
 
         // 输出结果
         ShopPerformanceSink.writeResult(resultStream);

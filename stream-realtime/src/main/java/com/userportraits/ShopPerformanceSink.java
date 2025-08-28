@@ -62,7 +62,7 @@ public class ShopPerformanceSink {
                 },
                 new JdbcConnectionOptions.JdbcConnectionOptionsBuilder()
                         .withUrl("jdbc:mysql://cdh01:3306/userportraits")
-                        .withDriverName("com.mysql.jdbc.Driver")
+                        .withDriverName("com.mysql.cj.jdbc.Driver")
                         .withUsername("root")
                         .withPassword("123456")
                         .build()
