@@ -76,9 +76,13 @@ public class DataGenerator implements SourceFunction<String> {
             data.setDimension(DIMNSIONS[random.nextInt(DIMNSIONS.length)]);
 
             // 发送数据到flink
-            ctx.collect(JSON.toJSONString(data));
+            String jsonData = JSON.toJSONString(data);
+            System.out.println("生成数据：" + jsonData);
+            ctx.collect(jsonData);
             currentCount++;
             Thread.sleep(10);
+
+
         }
     }
 

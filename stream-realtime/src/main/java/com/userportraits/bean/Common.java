@@ -54,6 +54,7 @@ public class Common {
         private Integer finalPayUserCount; // 最终付款人数
         private Double finalPayAmount; // 最终付款金额
         private Integer finalPayQuantity; // 最终付款件数
+        private Long windowEndTs; // 窗口结束时间戳（用于判断数据时效性）
     }
 
 
