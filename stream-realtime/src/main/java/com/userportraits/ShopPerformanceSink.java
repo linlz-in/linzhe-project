@@ -38,16 +38,16 @@ public class ShopPerformanceSink {
         ).print().name("realtime-console-sink");
 
         // 2. Kafka实时写入（供下游实时dashboard消费）
-//        Properties kafkaProps = new Properties();
-//        kafkaProps.setProperty("bootstrap.servers", "kafka01:9092,kafka02:9092");
-//
-//        resultStream.map(JSON::toJSONString)
-//                .addSink(new FlinkKafkaProducer<>(
-//                        "shop-performance-realtime-result",
-//                        new SimpleStringSchema(),
-//                        kafkaProps
-//                )).name("realtime-kafka-sink")
-//                .uid("realtime-kafka-sink-uid");
+        Properties kafkaProps = new Properties();
+        kafkaProps.setProperty("bootstrap.servers", "cdh01:9092,cdh02:9092,cdh03:9092");
+
+        resultStream.map(JSON::toJSONString)
+                .addSink(new FlinkKafkaProducer<>(
+                        "shop-performance-realtime-result",
+                        new SimpleStringSchema(),
+                        kafkaProps
+                )).name("realtime-kafka-sink")
+                .uid("realtime-kafka-sink-uid");
 
         // 3. 实时写入MySQL（带批量优化）
         String insertSql = "replace into shop_performance_realtime " +
@@ -76,12 +76,12 @@ public class ShopPerformanceSink {
                             ps.setLong(14, result.getWindowEndTs());
                         },
                         JdbcExecutionOptions.builder()
-                                .withBatchSize(500) // 批量写入大小
-                                .withBatchIntervalMs(1000) // 批量写入间隔
+                                .withBatchSize(10) // 批量写入大小
+                                .withBatchIntervalMs(100) // 批量写入间隔
                                 .withMaxRetries(3) // 失败重试次数
                                 .build(),
                         new JdbcConnectionOptions.JdbcConnectionOptionsBuilder()
-                                .withUrl("jdbc:mysql://db01:3306/realtime_db?useSSL=false&serverTimezone=UTC")
+                                .withUrl("jdbc:mysql://cdh01:3306/realtime_db?useSSL=false&serverTimezone=UTC")
                                 .withDriverName("com.mysql.cj.jdbc.Driver")
                                 .withUsername("root")
                                 .withPassword("123456")

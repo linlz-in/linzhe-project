@@ -3,12 +3,9 @@ package com.userportraits;
 import com.userportraits.bean.Common;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.AggregateFunction;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
-import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindows;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
@@ -28,24 +25,24 @@ import java.util.Set;
  * ads： 店铺绩效核心指标计算（十个指标 + 3个链路分析）
  */
 public class ShopPerformanceADS {
-    private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern(Common.DATETIME_FORMAT);
+//    private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern(Common.DATETIME_FORMAT);
 
     public static DataStream<Common.ShopPerformanceResult> calculateIndicators(DataStream<Common.CleanedShopData> cleanedStream) {
         // 1. 提取事件时间并指定水印策略（处理乱序数据，允许30秒延迟）
         DataStream<Common.CleanedShopData> withEventTime = cleanedStream
                 .assignTimestampsAndWatermarks(WatermarkStrategy
-                        .<Common.CleanedShopData>forBoundedOutOfOrderness(Duration.ofSeconds(30))
+                        .<Common.CleanedShopData>forBoundedOutOfOrderness(Duration.ofSeconds(2)) // 允许两小时延迟
                         .withTimestampAssigner((data, timestamp) ->
                                 // 以咨询时间作为事件时间基准
                                 data.getConsultTime().toEpochSecond(ZoneOffset.UTC) * 1000
                         ));
 
-        // 2. 按商品ID+维度分组，使用1分钟滑动窗口（每10秒更新一次）
+        // 2. 调整窗口参数：测试环境使用5秒窗口+5秒滑动（确保快速出结果）
         return withEventTime
                 .keyBy(data -> data.getProductId() + "_" + data.getDimension())
-                // 滑动窗口：窗口大小1分钟，滑动步长10秒（实时性更高）
-                .window(SlidingEventTimeWindows.of(Time.minutes(1), Time.seconds(10)))
-                .allowedLateness(Time.minutes(1)) // 允许1分钟迟到数据更新结果
+                // 滚动窗口：窗口大小1天，从每天0点开始（需指定时区，避免UTC时区偏差）
+                .window(TumblingEventTimeWindows.of(Time.seconds(10)))  // 减8小时适配北京时间（UTC+8）
+                .allowedLateness(Time.seconds(0)) // 允许1小时迟到数据
                 .aggregate(new IndicatorAggregate(), new WindowResultAssigner())
                 .name("real-time-shop-performance")
                 .uid("real-time-shop-performance-uid");
@@ -147,20 +144,19 @@ public class ShopPerformanceADS {
         public void apply(String key, TimeWindow window,
                           Iterable<Common.ShopPerformanceResult> input,
                           Collector<Common.ShopPerformanceResult> out) {
-
+            // 打印窗口信息，确认是否触发
+            System.out.println("窗口触发：" + window.getStart() + " ~ " + window.getEnd());
             Common.ShopPerformanceResult result = input.iterator().next();
             // 解析key获取商品id和维度
             String[] keyParts = key.split("_");
             result.setProductId(keyParts[0]);
             result.setDimension(keyParts[1]);
 
-            // 格式化窗口时间
-            String windowTime = LocalDateTime.ofEpochSecond(window.getStart() / 1000, 0, ZoneOffset.UTC)
-                    .format(dtf) + " - " +
-                    LocalDateTime.ofEpochSecond(window.getEnd() / 1000, 0, ZoneOffset.UTC)
-                            .format(dtf);
-            result.setTimeWindow(windowTime);
-            result.setWindowEndTs(window.getEnd()); // 设置窗口结束时间戳
+            // 格式化窗口时间为“yyyy-MM-dd”（天级）
+            String windowDate = LocalDateTime.ofEpochSecond(window.getStart() / 1000, 0, ZoneOffset.ofHours(8))
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            result.setTimeWindow(windowDate);
+            result.setWindowEndTs(window.getEnd());  // 直接存储日期，而非时间段
 
             out.collect(result);
         }

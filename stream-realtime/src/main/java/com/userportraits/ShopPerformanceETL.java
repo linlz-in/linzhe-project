@@ -2,7 +2,6 @@ package com.userportraits;
 
 import com.alibaba.fastjson.JSON;
 import com.userportraits.bean.Common;
-import com.userportraits.data.DataGenerator;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,8 +13,6 @@ import org.apache.flink.util.OutputTag;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.Objects;
 
 /**
  * @Package:
@@ -43,13 +40,13 @@ public class ShopPerformanceETL {
                 })
                 .process(new ProcessFunction<RawShopData, Common.CleanedShopData>() {
                     @Override
-                    public void processElement(RawShopData rawData, ProcessFunction<RawShopData, Common.CleanedShopData>.Context ctx, Collector<Common.CleanedShopData> out) throws Exception {
+                    public void processElement(RawShopData rawData, ProcessFunction<RawShopData, Common.CleanedShopData>.Context ctx, Collector<Common.CleanedShopData> out) {
                         try {
                             Common.CleanedShopData cleanedData = new Common.CleanedShopData();
                             DateTimeFormatter dtf = DateTimeFormatter.ofPattern(Common.DATETIME_FORMAT);
 
                             //基础字段赋值
-                            cleanedData.setRecordId(rawData.getRecorId());
+                            cleanedData.setRecordId(rawData.getRecordId());
                             cleanedData.setUserId(rawData.getUserId());
                             cleanedData.setProductId(rawData.getProductId());
                             cleanedData.setCustomerServiceId(rawData.getCustomerServiceId());
@@ -93,7 +90,7 @@ public class ShopPerformanceETL {
     @AllArgsConstructor
     @NoArgsConstructor
     private static class RawShopData {
-        private String recorId;
+        private String recordId;
         private String userId;
         private String productId;
         private String customerServiceId;
