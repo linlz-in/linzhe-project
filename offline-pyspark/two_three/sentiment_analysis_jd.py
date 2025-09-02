@@ -6,18 +6,10 @@
 创建人: 郭洵
 创建时间: 2025-05-03
 目标: 预测用户对商品的评分（1-5分），为后续用户画像特征计算做准备
-产出:
-    1. 评论情感预测代码
-    2. 模型优化文档（需另见优化记录）
-    3. 模型部署（需另见部署脚本）
-要求:
-    - 最少使用三种模型
-    - 需有特征衍生、特征选择
-    - 明确的注释
-    - 评估指标: Micro F1
 """
 
 import pandas as pd
+import numpy as np
 import re
 import jieba
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -85,8 +77,8 @@ class FeatureEngineer:
     """
 
     def __init__(self):
-        self.vectorizer = TfidfVectorizer(max_features=1000, stop_words=['的', '了', '是', '在', '和'])
-        self.selected_features = None
+        self.vectorizer = TfidfVectorizer(max_features=500, stop_words=['的', '了', '是', '在', '和'])
+        self.category_encoders = {}
 
     def create_features(self, df, df_product, is_train=True):
         """
@@ -124,7 +116,8 @@ class FeatureEngineer:
 
         # 5. 提取类别信息
         print("提取类别信息...")
-        df[['一级类目', '二级类目', '三级类目']] = df['所属类别'].str.split('-', expand=True)
+        if '所属类别' in df.columns:
+            df[['一级类目', '二级类目', '三级类目']] = df['所属类别'].str.split('-', expand=True)
 
         # 6. 文本向量化
         print("文本向量化...")
@@ -133,22 +126,31 @@ class FeatureEngineer:
         else:
             text_features = self.vectorizer.transform(df['text_combined'])
 
-        # 7. 数值特征
+        # 7. 数值特征 - 确保都是数值类型
         print("准备数值特征...")
-        numeric_features = df[['标题长度', '内容长度', '总文本长度',
-                               '评论年份', '评论月份', '评论日',
-                               '评论小时', '评论星期']].fillna(0)
+        numeric_cols = ['标题长度', '内容长度', '总文本长度',
+                        '评论年份', '评论月份', '评论日',
+                        '评论小时', '评论星期']
 
-        # 8. 类别特征编码
+        # 确保所有数值列都是float64类型
+        numeric_features = df[numeric_cols].fillna(0).astype(np.float64)
+
+        # 8. 类别特征编码 - 使用数值编码而不是one-hot
         print("编码类别特征...")
-        for col in ['一级类目', '二级类目']:
-            if col in df.columns:
-                encoded = pd.get_dummies(df[col].fillna('未知'), prefix=col)
-                numeric_features = pd.concat([numeric_features, encoded], axis=1)
+        if '一级类目' in df.columns:
+            df['一级类目编码'] = df['一级类目'].fillna('未知').astype('category').cat.codes
+            numeric_features['一级类目编码'] = df['一级类目编码'].astype(np.float64)
+
+        if '二级类目' in df.columns:
+            df['二级类目编码'] = df['二级类目'].fillna('未知').astype('category').cat.codes
+            numeric_features['二级类目编码'] = df['二级类目编码'].astype(np.float64)
+
+        # 将数值特征转换为稀疏矩阵
+        from scipy.sparse import csr_matrix, hstack
+        numeric_sparse = csr_matrix(numeric_features.values)
 
         # 合并所有特征
-        from scipy.sparse import hstack
-        all_features = hstack([numeric_features, text_features])
+        all_features = hstack([numeric_sparse, text_features])
 
         print(f"特征工程完成，特征维度: {all_features.shape}")
 
@@ -233,13 +235,13 @@ def main():
             ))
         ]),
         '随机森林': RandomForestClassifier(
-            n_estimators=100,
+            n_estimators=50,  # 减少树的数量以加快训练
             random_state=42,
             n_jobs=-1,
             max_depth=10
         ),
         'LightGBM': lgb.LGBMClassifier(
-            n_estimators=100,
+            n_estimators=50,  # 减少树的数量以加快训练
             random_state=42,
             n_jobs=-1,
             objective='multiclass',
@@ -258,17 +260,18 @@ def main():
     print(f"\n最佳模型: {best_model_name}, Micro F1: {results[best_model_name]:.4f}")
 
     # 7. 分析特征重要性
-    if hasattr(best_model, 'feature_importances_') or hasattr(best_model.steps[-1][1], 'feature_importances_'):
-        analyze_feature_importance(best_model.steps[-1][1] if hasattr(best_model, 'steps') else best_model,
-                                   feature_engineer, X_train)
+    if hasattr(best_model, 'feature_importances_') or (
+            hasattr(best_model, 'steps') and hasattr(best_model.steps[-1][1], 'feature_importances_')):
+        model_to_analyze = best_model.steps[-1][1] if hasattr(best_model, 'steps') else best_model
+        analyze_feature_importance(model_to_analyze, feature_engineer, X_train)
 
     # 8. 在测试集上评估最佳模型
     print("\n在测试集上评估最佳模型...")
-    X_test, y_test = feature_engineer.create_features(
+    X_test_features, y_test_true = feature_engineer.create_features(
         df_test, df_product, is_train=False
     )
-    y_pred_test = best_model.predict(X_test)
-    test_f1 = f1_score(y_test, y_pred_test, average='micro')
+    y_pred_test = best_model.predict(X_test_features)
+    test_f1 = f1_score(y_test_true, y_pred_test, average='micro')
     print(f"测试集 Micro F1 分数: {test_f1:.4f}")
 
     # 9. 保存模型
